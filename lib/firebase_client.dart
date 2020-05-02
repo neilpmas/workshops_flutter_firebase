@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:http/http.dart';
+import 'package:workshops_flutter_firebase/firebase_helper.dart';
 
 import 'main.dart';
 
@@ -7,10 +11,7 @@ class FirebaseClient {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   Stream<List<User>> getUsers() {
-    return Firestore.instance
-        .collection('users')
-        .snapshots()
-        .map((querySnapshot) {
+    return Firestore.instance.collection('users').snapshots().map((querySnapshot) {
       return querySnapshot.documents.map((document) {
         return User(document['name'], document['token']);
       }).toList();
@@ -26,5 +27,21 @@ class FirebaseClient {
 
   Future<String> getToken() {
     return _firebaseMessaging.getToken();
+  }
+
+  void sendMessage(String token) async {
+    final Response response = await post(
+      FirebaseHelper.fcmUrl,
+      body: jsonEncode(FirebaseHelper.getMessageBody(token)),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'key=${FirebaseHelper.serverKey}',
+      },
+    );
+
+    final int statusCode = response.statusCode;
+    if (statusCode < 200 || statusCode > 400) {
+      throw new Exception("Error fetching data!");
+    }
   }
 }
