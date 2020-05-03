@@ -6,17 +6,19 @@ import 'package:workshops_flutter_firebase/firebase_client.dart';
 void main() => runApp(App());
 
 class App extends StatefulWidget {
+  final FirebaseClient firebaseClient;
+
+  const App({Key key, this.firebaseClient}) : super(key: key);
+
   @override
   _AppState createState() => _AppState();
 }
 
 class _AppState extends State<App> {
-  final FirebaseClient firebaseClient = FirebaseClient();
-
   @override
   void initState() {
     super.initState();
-    firebaseClient.init();
+    widget.firebaseClient.init();
   }
 
   @override
@@ -26,7 +28,7 @@ class _AppState extends State<App> {
         builder: (context) => Scaffold(
           backgroundColor: Colors.green,
           body: StreamBuilder<List<User>>(
-            stream: firebaseClient.getUsers(),
+            stream: widget.firebaseClient.getUsers(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return Text('Error: ${snapshot.error}');
@@ -41,7 +43,7 @@ class _AppState extends State<App> {
                 itemBuilder: (context, position) {
                   return ListItem(
                     user: snapshot.data[position],
-                    onUserTap: firebaseClient.sendMessage,
+                    onUserTap: widget.firebaseClient.sendMessage,
                   );
                 },
               );
@@ -63,9 +65,9 @@ class _AppState extends State<App> {
     );
 
     if (username != null) {
-      var token = await firebaseClient.getToken();
+      var token = await widget.firebaseClient.getToken();
       var person = User(username, token);
-      firebaseClient.saveNewUser(person);
+      widget.firebaseClient.saveNewUser(person);
     }
   }
 }
@@ -127,8 +129,7 @@ class _EnterNameDialogState extends State<EnterNameDialog> {
         ),
         FlatButton(
           child: new Text('OK'),
-          onPressed: () =>
-              Navigator.of(context).pop(_textController.text.toString()),
+          onPressed: () => Navigator.of(context).pop(_textController.text.toString()),
         )
       ],
     );
